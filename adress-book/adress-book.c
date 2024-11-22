@@ -14,6 +14,9 @@ void addContact(Contact **contacts, int *count, int *capacity);
 void viewContacts(Contact *contacts, int count);
 void searchContact(Contact *contacts, int count);
 void deleteContact(Contact **contacts, int *count, int *capacity);
+void sortContacts(Contact *contacts, int count);
+void updateContact(Contact **contact, int *count);
+void exportToJSON(Contact *contacts, int count);
 
 int main()
 {
@@ -24,7 +27,7 @@ int main()
 
     while (1)
     {
-        printf("\n1. Add Contact\n2. View Contacts\n3. Search Contact\n4. Delete Contact\n5. Exit\n");
+        printf("\n1. Add Contact\n2. View Contacts\n3. Search Contact\n4. Delete Contact\n5. Sort Contacts\n6. Update Contact\n7. Export to JSON\n8. Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
 
@@ -43,6 +46,15 @@ int main()
             deleteContact(&contacts, &count, &capacity);
             break;
         case 5:
+            sortContacts(contacts, count);
+            break;
+        case 6:
+            updateContact(&contacts, &count);
+            break;
+        case 7:
+            exportToJSON(contacts, count);
+            break;
+        case 8:
             free(contacts); // Free allocated memory before exiting
             printf("Exiting...\n");
             return 0;
@@ -59,15 +71,24 @@ void addContact(Contact **contacts, int *count, int *capacity)
     if (*count == *capacity)
     {
         *capacity = (*capacity == 0) ? 1 : (*capacity * 2);
-        Contact *temp = realloc(*contacts, (*capacity) * sizeof(Contact));
-        if (temp == NULL)
+        // Contact *temp = realloc(*contacts, (*capacity) * sizeof(Contact));
+        // if (temp == NULL)
+        // {
+        //     perror("Failed to allocate memory");
+        //     free(*contacts);
+        //     exit(1);
+        // }
+        // *contacts = temp;
+
+        // reallocate memory in the array to add a new element
+        *contacts = realloc(*contacts, (*capacity) * (sizeof(Contact)));
+        if (*contacts == NULL)
         {
-            perror("Failed to allocate memory");
-            free(*contacts);
+            printf("Memory allocation failed!\n");
             exit(1);
         }
-        *contacts = temp;
     }
+    // add the new values
     printf("Enter Name: ");
     scanf(" %[^\n]", (*contacts)[*count].name);
     printf("Enter Phone: ");
@@ -77,7 +98,7 @@ void addContact(Contact **contacts, int *count, int *capacity)
 }
 
 // View all contacts
-void viewContacts(Contact *contacts, int count)
+void viewContacts(Contact contacts[], int count)
 {
     if (count == 0)
     {
@@ -170,4 +191,90 @@ void deleteContact(Contact **contacts, int *count, int *capacity)
     {
         printf("No contact found with the name '%s'.\n", deleteName);
     }
+}
+
+// sort contacts alphabetically
+void sortContacts(Contact *contacts, int count)
+{
+    if (count < 2)
+    {
+        printf("Not enough contacts to sort.\n");
+        return;
+    }
+    // bubble sort
+    for (int i = 0; i < count; i++)
+    {
+        for (int j = 0; j < count - i - 1; j++)
+        {
+            if (strcmp(contacts[i].name, contacts[j + 1].name) > 0)
+            {
+                // Swap contacts[j] and contacts[j+1]
+                Contact temp = contacts[j];
+                contacts[j] = contacts[j + 1];
+                contacts[j + 1] = temp;
+            }
+        }
+    }
+    printf("Contacts sorted alphabetically by name!\n");
+}
+
+void updateContact(Contact **contacts, int *count)
+{
+    if (*count == 0)
+    {
+        printf("No contacts to update.\n");
+        return;
+    }
+
+    // Ask the user to type in a contact name
+    char updateName[50];
+    printf("Enter the contact's name to update: \n");
+    scanf(" %[^\n]", updateName);
+
+    // Loop to find the contact
+    for (int i = 0; i < *count; i++)
+    {
+        if (strcmp((*contacts)[i].name, updateName) == 0)
+        {
+            // Update the name
+            char newName[50];
+            printf("Enter the new name for the contact: \n");
+            scanf(" %[^\n]", newName);
+            strcpy((*contacts)[i].name, newName); // Use strcpy for string assignment
+
+            printf("Contact updated to: %s\n", (*contacts)[i].name);
+            return; // Exit after updating
+        }
+    }
+
+    // If contact is not found
+    printf("Contact with the name '%s' not found.\n", updateName);
+}
+
+void exportToJSON(Contact *contacts, int count)
+{
+    if (count == 0)
+    {
+        printf("No contacts to export.\n");
+        return;
+    }
+    // Opens a file named contacts.json in write mode
+    FILE *file = fopen("contacts.json", "w");
+    if (!file)
+    {
+        perror("Failed to open file.");
+        return;
+    }
+    fprintf(file, "[\n");
+    for (int i = 0; i < count; i++)
+    {
+        fprintf(file, "  {\n");
+        fprintf(file, "    \"name\": \"%s\",\n", contacts[i].name);
+        fprintf(file, "    \"phone\": \"%s\"\n", contacts[i].phone);
+        fprintf(file, "  }%s\n", (i < count - 1) ? "," : "");
+    }
+    fprintf(file, "]\n");
+
+    fclose(file);
+    printf("Contacts exported to 'contacts.json' successfully!\n");
 }
