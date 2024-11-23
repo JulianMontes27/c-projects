@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Living Room Light",
+    "type": "Light"
+  },
+  {
+    "name": "Thermostat",
+    "type": "Thermostat"
+  },
+  {
+    "name": "Security System",
+    "type": "Security System"
+  }
+]

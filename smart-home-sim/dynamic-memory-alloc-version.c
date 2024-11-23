@@ -22,6 +22,7 @@ void updateDeviceState(Device *devices, int count);
 void viewDevices(Device *devices, int count);
 void searchDevice(Device *devices, int count);
 void addDevice(Device **devices, int *count, int *maxDevices);
+void saveToJSON(Device *devices, int count);
 
 int main()
 {
@@ -56,7 +57,12 @@ int main()
             searchDevice(devices, count);
             break;
         case 5:
+            saveToJSON(devices, count);
+            break;
+        case 6:
             printf("Exiting...\n");
+            free(devices); // Free allocated memory
+
             return 0;
         default:
             printf("Invalid choice. Try again.\n");
@@ -214,4 +220,37 @@ void addDevice(Device **devices, int *count, int *maxDevices)
     (*count)++;
 
     printf("Device '%s' added successfully!\n", newDevice.name);
+}
+
+void saveToJSON(Device *devices, int count)
+{
+    // read every single Device from devices
+    if (count == 0)
+    {
+        printf("No devices to add to a file.\n");
+        return;
+    }
+
+    // Opens a file named contacts.json in write mode
+    FILE *fptr = fopen("devices.json", "w");
+    if (!fptr)
+    {
+        perror("Failed to open file.");
+        return;
+    }
+    fprintf(fptr, "[\n");
+    for (int i = 0; i < count; i++)
+    {
+        fprintf(fptr, "  {\n");
+        fprintf(fptr, "    \"name\": \"%s\",\n", devices[i].name);
+        fprintf(fptr, "    \"type\": \"%s\"\n", devices[i].type == LIGHT ? "Light" : devices[i].type == THERMOSTAT ? "Thermostat"
+                                                                                                                   : "Security System");
+        fprintf(fptr, "  }%s\n", (i < count - 1) ? "," : "");
+    }
+    fprintf(fptr, "]\n");
+
+    fclose(fptr);
+    printf("Contacts exported to 'devices.json' successfully!\n");
+
+    return;
 }
